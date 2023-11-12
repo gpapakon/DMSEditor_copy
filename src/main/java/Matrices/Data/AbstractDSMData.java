@@ -21,15 +21,13 @@ import java.util.*;
  * @author: Aiden Carney
  */
 public abstract class AbstractDSMData {
-    private AbstractDSMDataProduct abstractDSMDataProduct = new AbstractDSMDataProduct();
+    private AbstractDSMStack abstractDSMStack = new AbstractDSMStack();
+	private AbstractDSMDataProduct abstractDSMDataProduct = new AbstractDSMDataProduct();
 	protected Vector<DSMItem> rows;
     protected Vector<DSMItem> cols;
     protected Vector<DSMConnection> connections;
     protected HashMap<String, Vector<DSMInterfaceType>> interfaceTypes;
 
-    private final BooleanProperty wasModified = new SimpleBooleanProperty(false);
-    protected Stack<MatrixChange> undoStack;
-    protected Stack<MatrixChange> redoStack;
     protected static final int MAX_UNDO_HISTORY = Integer.MAX_VALUE;  // TODO: undo history should be based on checkpoints and not this big
 
 
@@ -39,17 +37,17 @@ public abstract class AbstractDSMData {
      * There is one grouping, which is the default: "(None)"
      */
     public AbstractDSMData() {
-        undoStack = new Stack<>();
-        redoStack = new Stack<>();
+        abstractDSMStack.setUndoStack(new Stack<>());
+        abstractDSMStack.setRedoStack(new Stack<>());
 
         rows = new Vector<>();
         cols = new Vector<>();
         connections = new Vector<>();
         interfaceTypes = new HashMap<>();
 
-        setWasModified();
+        abstractDSMStack.setWasModified();
 
-        clearStacks();
+        abstractDSMStack.clearStacks();
     }
 
 
@@ -59,8 +57,8 @@ public abstract class AbstractDSMData {
      * @param copy AbstractDSMData object to copy
      */
     public AbstractDSMData(AbstractDSMData copy) {
-        undoStack = new Stack<>();
-        redoStack = new Stack<>();
+        abstractDSMStack.setUndoStack(new Stack<>());
+        abstractDSMStack.setRedoStack(new Stack<>());
 
         rows = new Vector<>();
         for(DSMItem row : copy.getRows()) {
@@ -91,9 +89,9 @@ public abstract class AbstractDSMData {
         abstractDSMDataProduct.setCustomer2(copy.getCustomerProperty());
         abstractDSMDataProduct.setVersionNumber2(copy.getVersionNumberProperty());
 
-        setWasModified();
+        abstractDSMStack.setWasModified();
 
-        clearStacks();
+        abstractDSMStack.clearStacks();
     }
 
 
@@ -113,14 +111,7 @@ public abstract class AbstractDSMData {
      * @param change the change object to handle
      */
     public final void addChangeToStack(MatrixChange change) {
-        change.runFunction();
-        undoStack.push(change);
-
-        if(undoStack.size() > MAX_UNDO_HISTORY) {  // remove bottom item from stack
-            undoStack.remove(0);
-        }
-
-        setWasModified();
+        abstractDSMStack.addChangeToStack(change);
     }
 
 
@@ -129,25 +120,7 @@ public abstract class AbstractDSMData {
      * to the redo stack
      */
     public final void undoToCheckpoint() {
-        int iter = 0;
-        while(true) {  // undo state until the last checkpoint
-            if(undoStack.size() > 0) {  // make sure stack is not empty
-                MatrixChange change = undoStack.peek();
-                if(change.isCheckpoint() && iter > 0) {  // stop before the checkpoint unless it is the first item
-                    break;
-                }
-                undoStack.pop();  // add change to the redo stack
-
-                change.runUndoFunction();
-                redoStack.push(change);
-
-                iter += 1;
-            } else {
-                break;
-            }
-        }
-
-        setWasModified();
+        abstractDSMStack.undoToCheckpoint();
     }
 
 
@@ -155,23 +128,7 @@ public abstract class AbstractDSMData {
      * Redoes changes that are on the redo stack to the next checkpoint (checkpoint is included).
      */
     public final void redoToCheckpoint() {
-        while(true) {
-            if(redoStack.size() > 0) {  // make sure stack is not empty
-                MatrixChange change = redoStack.peek();
-                redoStack.pop();  // add change to the redo stack
-
-                change.runFunction();
-                undoStack.push(change);
-
-                if(change.isCheckpoint()) {  // stop after the checkpoint
-                    break;
-                }
-            } else {
-                break;
-            }
-        }
-
-        setWasModified();
+        abstractDSMStack.redoToCheckpoint();
     }
 
 
@@ -180,10 +137,7 @@ public abstract class AbstractDSMData {
      * could go horribly wrong
      */
     public final void setCurrentStateAsCheckpoint() {
-        if (!undoStack.isEmpty()) {
-            undoStack.peek().setCheckpoint(true);
-        }
-        redoStack.clear();
+        abstractDSMStack.setCurrentStateAsCheckpoint();
     }
 
 
@@ -193,7 +147,7 @@ public abstract class AbstractDSMData {
      * @return if changes are on the undo stack
      */
     public final boolean canUndo() {
-        return undoStack.size() > 0;
+        return abstractDSMStack.canUndo();
     }
 
 
@@ -203,7 +157,7 @@ public abstract class AbstractDSMData {
      * @return if changes are on the redo stack
      */
     public final boolean canRedo() {
-        return redoStack.size() > 0;
+        return abstractDSMStack.canRedo();
     }
 
 
@@ -211,8 +165,7 @@ public abstract class AbstractDSMData {
      * clears both undo and redo stacks (useful for instantiation of the class)
      */
     public final void clearStacks() {
-        undoStack.clear();
-        redoStack.clear();
+        abstractDSMStack.clearStacks();
     }
 
 
@@ -220,7 +173,7 @@ public abstract class AbstractDSMData {
      * Clears the wasModified flag. Used for when matrix has been saved to a file. Does not add changes to the stack
      */
     public final void clearWasModifiedFlag() {
-        this.wasModified.set(false);
+        abstractDSMStack.clearWasModifiedFlag();
     }
 
 
@@ -228,7 +181,7 @@ public abstract class AbstractDSMData {
      * Sets the was modified flag. Does not add changes to the stack
      */
     public final void setWasModified() {
-        wasModified.set(true);
+        abstractDSMStack.setWasModified();
     }
 
 
@@ -239,7 +192,7 @@ public abstract class AbstractDSMData {
      * @return if the matrix has been modified, true if it has, false if not
      */
     public final boolean getWasModified() {
-        return wasModified.getValue();
+        return abstractDSMStack.getWasModified();
     }
 
 
@@ -247,7 +200,7 @@ public abstract class AbstractDSMData {
      * @return  the BooleanProperty of the wasModified flag so that things can be bound to it
      */
     public final BooleanProperty getWasModifiedProperty() {
-        return wasModified;
+        return abstractDSMStack.getWasModified2();
     }
 //endregion
 
@@ -551,7 +504,7 @@ public abstract class AbstractDSMData {
      * @param isRow boolean flag of whether the item is a row or not
      */
     public void addItem(DSMItem item, boolean isRow) {
-        addChangeToStack(new MatrixChange(
+        abstractDSMStack.addChangeToStack(new MatrixChange(
                 () -> {  // do function
                     if (isRow) {
                         this.rows.add(item);
@@ -594,7 +547,7 @@ public abstract class AbstractDSMData {
     public void deleteItem(DSMItem item) {
         boolean isRow = rows.contains(item);  // check if the item was a row in case it needs to be added again
 
-        addChangeToStack(new MatrixChange(
+        abstractDSMStack.addChangeToStack(new MatrixChange(
                 () -> {  // do function
                     removeItem(item);
                 },
@@ -632,7 +585,7 @@ public abstract class AbstractDSMData {
     public void setItemSortIndex(DSMItem item, double newIndex) {
         double oldIndex = item.getSortIndex();
 
-        addChangeToStack(new MatrixChange(
+        abstractDSMStack.addChangeToStack(new MatrixChange(
                 () -> {  // do function
                     item.setSortIndex(newIndex);
                 },
@@ -651,7 +604,7 @@ public abstract class AbstractDSMData {
      */
     public final void addInterfaceTypeGrouping(String name) {
         if(!interfaceTypes.containsKey(name)) {
-            addChangeToStack(new MatrixChange(
+            abstractDSMStack.addChangeToStack(new MatrixChange(
                     () -> {  // do function
                         interfaceTypes.put(name, new Vector<>());
                     },
@@ -677,7 +630,7 @@ public abstract class AbstractDSMData {
         }
 
         if(!interfaceTypes.get(interfaceTypeGrouping).contains(interfaceType)) {
-            addChangeToStack(new MatrixChange(
+            abstractDSMStack.addChangeToStack(new MatrixChange(
                     () -> {  // do function
                         interfaceTypes.get(interfaceTypeGrouping).add(interfaceType);
                     },
@@ -699,7 +652,7 @@ public abstract class AbstractDSMData {
         if(interfaceTypes.containsKey(name)) {
             Vector<DSMInterfaceType> oldInterfaces = interfaceTypes.get(name);
 
-            addChangeToStack(new MatrixChange(
+            abstractDSMStack.addChangeToStack(new MatrixChange(
                     () -> {  // do function
                         interfaceTypes.remove(name);
                     },
@@ -725,7 +678,7 @@ public abstract class AbstractDSMData {
         }
 
         if(interfaceTypes.get(interfaceTypeGrouping).contains(interfaceType)) {
-            addChangeToStack(new MatrixChange(
+            abstractDSMStack.addChangeToStack(new MatrixChange(
                     () -> {  // do function
                         interfaceTypes.get(interfaceTypeGrouping).remove(interfaceType);
                     },
@@ -748,7 +701,7 @@ public abstract class AbstractDSMData {
         assert(interfaceTypes.get(oldName) != null);
 
         Vector<DSMInterfaceType> interfaces = interfaceTypes.get(oldName);
-        addChangeToStack(new MatrixChange(
+        abstractDSMStack.addChangeToStack(new MatrixChange(
                 () -> {  // do function
                     interfaceTypes.remove(oldName);
                     interfaceTypes.put(newName, interfaces);
@@ -770,7 +723,7 @@ public abstract class AbstractDSMData {
      */
     public void renameInterfaceType(DSMInterfaceType interfaceType, String newName) {
         String oldName = interfaceType.getName();
-        addChangeToStack(new MatrixChange(
+        abstractDSMStack.addChangeToStack(new MatrixChange(
                 () -> {  // do function
                     interfaceType.setName(newName);
                 },
@@ -826,7 +779,7 @@ public abstract class AbstractDSMData {
         String finalOldName = oldName;
         double finalOldWeight = oldWeight;
         ArrayList<DSMInterfaceType> finalOldInterfaces = oldInterfaces;
-        addChangeToStack(new MatrixChange(
+        abstractDSMStack.addChangeToStack(new MatrixChange(
                 () -> {  // do function
                     if (finalConnection == null) {
                         createConnection(rowUid, colUid, connectionName, weight, interfaces);
@@ -864,7 +817,7 @@ public abstract class AbstractDSMData {
             }
         }
 
-        addChangeToStack(new MatrixChange(
+        abstractDSMStack.addChangeToStack(new MatrixChange(
                 () -> {  // do function
                     connections.removeAll(toRemove);
                 },
@@ -886,7 +839,7 @@ public abstract class AbstractDSMData {
     public final void deleteConnection(int rowUid, int colUid) {
         for(DSMConnection connection : connections) {     // check to see if uid is in the rows
             if(connection.getRowUid() == rowUid && connection.getColUid() == colUid) {
-                addChangeToStack(new MatrixChange(
+                abstractDSMStack.addChangeToStack(new MatrixChange(
                         () -> {  // do function
                             removeConnection(rowUid, colUid);
                         },
@@ -926,7 +879,7 @@ public abstract class AbstractDSMData {
             modifyConnection(conn.getColUid(), conn.getRowUid(), conn.getConnectionName(), conn.getWeight(), conn.getInterfaces());
         }
 
-        addChangeToStack(new MatrixChange(
+        abstractDSMStack.addChangeToStack(new MatrixChange(
                 () -> {  // do function
                     cols = oldRows;
                     rows = oldCols;
