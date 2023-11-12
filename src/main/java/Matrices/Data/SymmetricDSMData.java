@@ -722,25 +722,29 @@ public class SymmetricDSMData extends AbstractDSMData implements IPropagationAna
         }
 
         for(DSMItem row : matrix.getRows()) {  // calculate bid of each item in the matrix for the given cluster
-            double inout = 0.0;  // sum of DSM interactions of the item with each of the items in the cluster
-
-            for(DSMItem col : matrix.getCols()) {
-                if(col.getGroup1().equals(group) && col.getAliasUid() != row.getUid()) {  // make connection a part of inout score
-                    DSMConnection conn = matrix.getConnection(row.getUid(), col.getUid());
-                    if(calculateByWeight && conn != null) {
-                        inout += conn.getWeight();
-                    } else if(conn != null) {
-                        inout += 1;
-                    }
-                }
-            }
-
-            Double clusterBid = Math.pow(inout, powdep) / Math.pow(Math.abs(optimalSizeCluster - clusterSize), powbid);
+            double inout = inout(matrix, group, calculateByWeight, row);
+			Double clusterBid = Math.pow(inout, powdep) / Math.pow(Math.abs(optimalSizeCluster - clusterSize), powbid);
             bids.put(row.getUid(), clusterBid);
         }
 
         return bids;
     }
+
+
+	private static double inout(SymmetricDSMData matrix, Grouping group, Boolean calculateByWeight, DSMItem row) {
+		double inout = 0.0;
+		for (DSMItem col : matrix.getCols()) {
+			if (col.getGroup1().equals(group) && col.getAliasUid() != row.getUid()) {
+				DSMConnection conn = matrix.getConnection(row.getUid(), col.getUid());
+				if (calculateByWeight && conn != null) {
+					inout += conn.getWeight();
+				} else if (conn != null) {
+					inout += 1;
+				}
+			}
+		}
+		return inout;
+	}
 
 
     /**
