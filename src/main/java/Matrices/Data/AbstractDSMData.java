@@ -264,27 +264,41 @@ public abstract class AbstractDSMData {
      * @param item the item to delete
      */
     protected final void removeItem(DSMItem item) {
-        int index = -1;
-        for(int i=0; i<this.rows.size(); i++) {     // check to see if uid is in the rows
+    	
+    	if(!removeItemFromRow(item)) {
+    		removeItemFromColumn(item);
+    	}
+        
+        clearItemConnections(item.getUid());
+    }
+    
+    
+    
+    protected final Boolean removeItemFromRow(DSMItem item) {
+    	Boolean flag = false;
+        for(int i=0; i < this.rows.size(); i++) {     // check to see if uid is in the rows
             if(rows.elementAt(i).getUid() == item.getUid()) {
-                index = i;
+            	
+            	rows.remove(i);
+            	flag = true;
                 break;
             }
         }
-        if (index != -1) {
-            rows.remove(index);
-        } else {                                   // uid was not in a row, must be in a column
-            for(int i=0; i<this.cols.size(); i++) {
-                if(cols.elementAt(i).getUid() == item.getUid()) {
-                    index = i;
-                    break;
-                }
-            }
-            if (index != -1) {
-                cols.remove(index);
+    	return flag;
+    }
+    
+    
+    protected final Boolean removeItemFromColumn(DSMItem item) {
+    	Boolean flag = false;
+    	
+    	for(int i=0; i < this.cols.size(); i++) {
+            if(cols.elementAt(i).getUid() == item.getUid()) {
+            	cols.remove(i);
+            	flag = true;
+                break;
             }
         }
-        clearItemConnections(item.getUid());
+    	return flag;
     }
 
 
