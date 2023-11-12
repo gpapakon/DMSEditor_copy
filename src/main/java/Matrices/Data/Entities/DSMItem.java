@@ -1,5 +1,7 @@
 package Matrices.Data.Entities;
 
+import Matrices.Data.AbstractDSMData;
+import Matrices.Data.MatrixChange;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import org.jdom2.Attribute;
@@ -250,5 +252,20 @@ public class DSMItem {
     public String toString() {
         return name.getValue();
     }  // TODO: This should not be how this is implemented (use a cell factory)
+
+
+	/**
+	 * Sets the name of an item in the matrix. This method should be called instead of directly modifying the item name because this method puts the change on the stack but does not set a checkpoint. This method can be overridden
+	 * @param newName  the new name for the item
+	 * @param abstractDSMData
+	 */
+	public void setItemName(String newName, AbstractDSMData abstractDSMData) {
+		String oldName = getName().getValue();
+		abstractDSMData.addChangeToStack(new MatrixChange(() -> {
+			setName(newName);
+		}, () -> {
+			setName(oldName);
+		}, false));
+	}
 }
 

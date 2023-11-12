@@ -622,17 +622,7 @@ public abstract class AbstractDSMData {
      * @param newName the new name for the item
      */
     public void setItemName(DSMItem item, String newName) {
-        String oldName = item.getName().getValue();
-
-        addChangeToStack(new MatrixChange(
-                () -> {  // do function
-                    item.setName(newName);
-                },
-                () -> {  // undo function
-                    item.setName(oldName);
-                },
-                false
-        ));
+        item.setItemName(newName, this);
     }
 
 
