@@ -2,6 +2,9 @@ package Matrices.Data.Entities;
 
 import org.jdom2.Element;
 
+import Matrices.Data.AbstractDSMData;
+import Matrices.Data.MatrixChange;
+
 
 /**
  * Data class to handle interface types used in a DSM. Each interface has a uid and a name associated with it.
@@ -115,7 +118,29 @@ public class DSMInterfaceType {
     public void setName(String name) {
         this.name = name;
     }
+    
+    
+    /**
+     * Renames an interface type's abbreviation. Puts the change on the stack but does not set a checkpoint.
+     *
+     * @param interfaceType    the interface who's abbreviation should be changed
+     * @param newAbbreviation  the new abbreviation for the interface grouping
+     */
+    public void updateInterfaceTypeAbbreviation(AbstractDSMData dsmData, String newAbbreviation) {
+//        String oldName = interfaceType.getName();
+        
+        dsmData.addChangeToStack(new MatrixChange(
+                () -> {  // do function
+                    this.setAbbreviation(newAbbreviation);
+                },
+                () -> {  // undo function
+                	this.setName(this.name);
+                },
+                false
+        ));
+    }
 
+    
 
     /**
      * Setter function for the abbreviation of the interface type

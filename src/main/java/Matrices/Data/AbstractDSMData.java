@@ -116,7 +116,7 @@ public abstract class AbstractDSMData {
      *
      * @param change the change object to handle
      */
-    protected final void addChangeToStack(MatrixChange change) {
+    public final void addChangeToStack(MatrixChange change) {
         change.runFunction();
         undoStack.push(change);
 
@@ -789,16 +789,9 @@ public abstract class AbstractDSMData {
      * @param newAbbreviation  the new abbreviation for the interface grouping
      */
     public void updateInterfaceTypeAbbreviation(DSMInterfaceType interfaceType, String newAbbreviation) {
-        String oldName = interfaceType.getName();
-        addChangeToStack(new MatrixChange(
-                () -> {  // do function
-                    interfaceType.setAbbreviation(newAbbreviation);
-                },
-                () -> {  // undo function
-                    interfaceType.setName(oldName);
-                },
-                false
-        ));
+    	
+    	interfaceType.updateInterfaceTypeAbbreviation(this, newAbbreviation);
+     
     }
 
 
