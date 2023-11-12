@@ -21,15 +21,11 @@ import java.util.*;
  * @author: Aiden Carney
  */
 public abstract class AbstractDSMData {
-    protected Vector<DSMItem> rows;
+    private AbstractDSMDataProduct abstractDSMDataProduct = new AbstractDSMDataProduct();
+	protected Vector<DSMItem> rows;
     protected Vector<DSMItem> cols;
     protected Vector<DSMConnection> connections;
     protected HashMap<String, Vector<DSMInterfaceType>> interfaceTypes;
-
-    protected StringProperty title = new SimpleStringProperty("");
-    protected StringProperty projectName = new SimpleStringProperty("");
-    protected StringProperty customer = new SimpleStringProperty("");
-    protected StringProperty versionNumber = new SimpleStringProperty("");
 
     private final BooleanProperty wasModified = new SimpleBooleanProperty(false);
     protected Stack<MatrixChange> undoStack;
@@ -90,10 +86,10 @@ public abstract class AbstractDSMData {
             connections.add(new DSMConnection(conn));
         }
 
-        title = copy.getTitleProperty();
-        projectName = copy.getProjectNameProperty();
-        customer = copy.getCustomerProperty();
-        versionNumber = copy.getVersionNumberProperty();
+        abstractDSMDataProduct.setTitle2(copy.getTitleProperty());
+        abstractDSMDataProduct.setProjectName2(copy.getProjectNameProperty());
+        abstractDSMDataProduct.setCustomer2(copy.getCustomerProperty());
+        abstractDSMDataProduct.setVersionNumber2(copy.getVersionNumberProperty());
 
         setWasModified();
 
@@ -970,7 +966,7 @@ public abstract class AbstractDSMData {
      * @return title data assigned to the matrix
      */
     public final String getTitle() {
-        return title.getValue();
+        return abstractDSMDataProduct.getTitle();
     }
 
 
@@ -980,7 +976,7 @@ public abstract class AbstractDSMData {
      * @return title data property assigned to the matrix
      */
     public final StringProperty getTitleProperty() {
-        return title;
+        return abstractDSMDataProduct.getTitle2();
     }
 
 
@@ -990,12 +986,7 @@ public abstract class AbstractDSMData {
      * @param title the new title data for the matrix
      */
     public final void setTitle(String title) {
-        String currentTitle = this.title.getValue();
-        addChangeToStack(new MatrixChange(
-                () -> this.title.set(title),
-                () -> this.title.set(currentTitle),
-                false
-        ));
+        abstractDSMDataProduct.setTitle(title, this);
     }
 
 
@@ -1005,7 +996,7 @@ public abstract class AbstractDSMData {
      * @return project name data assigned to the matrix
      */
     public final String getProjectName() {
-        return projectName.getValue();
+        return abstractDSMDataProduct.getProjectName();
     }
 
 
@@ -1015,7 +1006,7 @@ public abstract class AbstractDSMData {
      * @return project name property assigned to the matrix
      */
     public final StringProperty getProjectNameProperty() {
-        return projectName;
+        return abstractDSMDataProduct.getProjectName2();
     }
 
 
@@ -1025,12 +1016,7 @@ public abstract class AbstractDSMData {
      * @param projectName the new project name data for the matrix
      */
     public final void setProjectName(String projectName) {
-        String currentName = this.projectName.getValue();
-        addChangeToStack(new MatrixChange(
-                () -> this.projectName.set(projectName),
-                () -> this.projectName.set(currentName),
-                false
-        ));
+        abstractDSMDataProduct.setProjectName(projectName, this);
     }
 
 
@@ -1040,7 +1026,7 @@ public abstract class AbstractDSMData {
      * @return customer data assigned to the matrix
      */
     public final String getCustomer() {
-        return customer.getValue();
+        return abstractDSMDataProduct.getCustomer();
     }
 
 
@@ -1050,7 +1036,7 @@ public abstract class AbstractDSMData {
      * @return customer property assigned to the matrix
      */
     public final StringProperty getCustomerProperty() {
-        return customer;
+        return abstractDSMDataProduct.getCustomer2();
     }
 
 
@@ -1060,12 +1046,7 @@ public abstract class AbstractDSMData {
      * @param customer the new customer data for the matrix
      */
     public final void setCustomer(String customer) {
-        String currentCustomer = this.customer.getValue();
-        addChangeToStack(new MatrixChange(
-                () -> this.customer.set(customer),
-                () -> this.customer.set(currentCustomer),
-                false
-        ));
+        abstractDSMDataProduct.setCustomer(customer, this);
     }
 
 
@@ -1075,7 +1056,7 @@ public abstract class AbstractDSMData {
      * @return version number property assigned to the matrix
      */
     public final String getVersionNumber() {
-        return versionNumber.getValue();
+        return abstractDSMDataProduct.getVersionNumber();
     }
 
 
@@ -1085,7 +1066,7 @@ public abstract class AbstractDSMData {
      * @return version number property assigned to the matrix
      */
     public final StringProperty getVersionNumberProperty() {
-        return versionNumber;
+        return abstractDSMDataProduct.getVersionNumber2();
     }
 
 
@@ -1096,12 +1077,7 @@ public abstract class AbstractDSMData {
      * @param versionNumber the new version number data for the matrix
      */
     public final void setVersionNumber(String versionNumber) {
-        String currentVersionNumber = this.versionNumber.getValue();
-        addChangeToStack(new MatrixChange(
-                () -> this.versionNumber.set(versionNumber),
-                () -> this.versionNumber.set(currentVersionNumber),
-                false
-        ));
+        abstractDSMDataProduct.setVersionNumber(versionNumber, this);
     }
 //endregion
 
